@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { App } from './App';
+import { ToastProvider } from './components/ToastProvider';
 import { base64UrlEncode } from './jwt';
 
 const TOKEN = [
@@ -120,6 +121,38 @@ describe('App', () => {
 
     expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Revoked token' })).toBeEnabled();
+  });
+
+  it('keeps the session when logout fails and does not mark the token as revoked', async () => {
+    const user = userEvent.setup();
+    const fetchMock = mockBackend();
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/logout')) {
+        return json({ error: 'invalid_token', message: 'The access token is invalid, expired or revoked' }, 401);
+      }
+      if (url.endsWith('/health')) return json({ status: 'ok' });
+      if (url.endsWith('/login')) {
+        return json({ access_token: TOKEN, token_type: 'Bearer', expires_in: 900, scope: 'read:data' });
+      }
+      return json({ error: 'not_found', message: 'Route not found' }, 404);
+    });
+
+    render(
+      <ToastProvider>
+        <App />
+      </ToastProvider>,
+    );
+
+    await logIn(user, 'david', 'david123');
+    expect(await screen.findByRole('heading', { name: 'Signed in as david' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Log out' }));
+
+    expect(await screen.findByText('Logout failed')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Signed in as david' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Revoked token' })).toBeDisabled();
+    expect(screen.queryByRole('heading', { name: 'Log in' })).not.toBeInTheDocument();
   });
 
   it('draws the token check the service does with the auth server', async () => {

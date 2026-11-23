@@ -4,6 +4,5 @@
 **/.env
 .git
 .vscode
-.cursor
 *.log
 .DS_Store

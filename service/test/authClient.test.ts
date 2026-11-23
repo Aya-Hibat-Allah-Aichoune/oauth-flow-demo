@@ -58,4 +58,28 @@ describe('createIntrospector', () => {
     const error = await introspect('t').catch((e: unknown) => e);
     expect((error as AuthServerError).failure).toBe('bad_response');
   });
+
+  it('throws "unavailable" when the introspection request times out', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      const signal = init?.signal;
+      if (!signal) throw new Error('expected AbortSignal');
+      return await new Promise<Response>((_resolve, reject) => {
+        signal.addEventListener('abort', () => {
+          reject(Object.assign(new Error('The operation was aborted'), { name: 'AbortError' }));
+        });
+      });
+    });
+    const introspect = createIntrospector({ ...OPTIONS, timeoutMs: 20, fetch: fetchMock });
+
+    const error = await introspect('t').catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(AuthServerError);
+    expect((error as AuthServerError).failure).toBe('unavailable');
+  });
+
+  it('throws "bad_response" when the response body is not JSON', async () => {
+    const { introspect } = setup(async () => new Response('not-json', { status: 200 }));
+
+    const error = await introspect('t').catch((e: unknown) => e);
+    expect((error as AuthServerError).failure).toBe('bad_response');
+  });
 });

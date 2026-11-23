@@ -64,11 +64,17 @@ export function App() {
     if (!session) return;
     const res = await api.logout(session.token);
     addTrace('Log out', 'The auth server puts the token on its revoke list.', logoutMessages(res), res);
-    if (res.ok) {
-      setRevokedToken(session.token);
-      toast({ tone: 'info', title: 'Logged out' });
+    if (!res.ok) {
+      toast({
+        tone: 'error',
+        title: 'Logout failed',
+        description: res.error.message,
+      });
+      return;
     }
+    setRevokedToken(session.token);
     setSession(null);
+    toast({ tone: 'info', title: 'Logged out' });
   }
 
   async function handleAction(action: ActionKey) {

@@ -26,11 +26,23 @@ interface Bucket {
   windowStart: number;
 }
 
-export function createLoginRateLimiter(options: LoginRateLimitOptions): LoginRateLimiter {
+export function createLoginRateLimiter(options: LoginRateLimitOptions): LoginRateLimiter & {
+  /** Exposed for tests: number of IP buckets still held in memory. */
+  bucketCount(): number;
+} {
   const now = options.now ?? Date.now;
   const buckets = new Map<string, Bucket>();
 
+  function sweepExpired(at: number): void {
+    for (const [key, bucket] of buckets) {
+      if (at - bucket.windowStart >= options.windowMs) {
+        buckets.delete(key);
+      }
+    }
+  }
+
   function prune(key: string, at: number): Bucket | undefined {
+    sweepExpired(at);
     const bucket = buckets.get(key);
     if (!bucket) return undefined;
     if (at - bucket.windowStart >= options.windowMs) {
@@ -62,10 +74,16 @@ export function createLoginRateLimiter(options: LoginRateLimitOptions): LoginRat
   }
 
   function recordSuccess(key: string): void {
+    sweepExpired(now());
     buckets.delete(key);
   }
 
-  return { check, recordFailure, recordSuccess };
+  return {
+    check,
+    recordFailure,
+    recordSuccess,
+    bucketCount: () => buckets.size,
+  };
 }
 
 export function clientKey(req: { ip?: string; socket?: { remoteAddress?: string } }): string {
