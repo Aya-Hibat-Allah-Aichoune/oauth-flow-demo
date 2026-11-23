@@ -1,4 +1,3 @@
-import { CircleExclamationPoint, Eye, EyeOff, LoaderCircle, Lock, LogIn, User } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 
 const DEMO_ACCOUNTS = [
@@ -34,15 +33,17 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   }
 
   return (
-    <section className="card" aria-labelledby="login-title">
-      <div className="card-header">
-        <div>
-          <h2 id="login-title">Log in</h2>
-          <p className="card-subtitle">Authenticate against the auth server.</p>
-        </div>
+    <section className="block" aria-labelledby="login-title">
+      <div className="block-head">
+        <span className="block-number" aria-hidden="true">
+          1
+        </span>
+        <h2 id="login-title">Log in</h2>
       </div>
 
-      <div className="demo-accounts" role="group" aria-label="Demo accounts">
+      <p className="block-intro">Pick a demo account or type one in. The password goes to the auth server only.</p>
+
+      <div className="accounts" role="group" aria-label="Demo accounts">
         {DEMO_ACCOUNTS.map((account) => (
           <button
             key={account.username}
@@ -50,36 +51,26 @@ export function LoginForm({ onLogin }: LoginFormProps) {
             className={`account ${username === account.username ? 'is-selected' : ''}`}
             onClick={() => fillDemoAccount(account)}
           >
-            <span className="avatar avatar-sm" aria-hidden="true">
-              {account.username[0]?.toUpperCase()}
-            </span>
-            <span className="account-text">
-              <strong>{account.username}</strong>
-              <span>{account.scope}</span>
-            </span>
+            <strong>{account.username}</strong>
+            <span>{account.scope}</span>
           </button>
         ))}
       </div>
 
       <form className="form" onSubmit={handleSubmit} noValidate>
-        <div className="field">
-          <label htmlFor="username">Username</label>
-          <div className="input-wrap">
-            <User className="input-icon" size={16} aria-hidden="true" />
-            <input
-              id="username"
-              autoComplete="username"
-              placeholder="david"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-            />
-          </div>
-        </div>
+        <label className="field">
+          <span>Username</span>
+          <input
+            autoComplete="username"
+            placeholder="david"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+          />
+        </label>
 
         <div className="field">
           <label htmlFor="password">Password</label>
-          <div className="input-wrap">
-            <Lock className="input-icon" size={16} aria-hidden="true" />
+          <div className="field-row">
             <input
               id="password"
               type={showPassword ? 'text' : 'password'}
@@ -90,29 +81,23 @@ export function LoginForm({ onLogin }: LoginFormProps) {
             />
             <button
               type="button"
-              className="input-action"
+              className="text-button"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
               aria-pressed={showPassword}
               onClick={() => setShowPassword((shown) => !shown)}
             >
-              {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+              {showPassword ? 'hide' : 'show'}
             </button>
           </div>
         </div>
 
         {error && (
           <p key={attempt} className="form-error" role="alert">
-            <CircleExclamationPoint size={16} aria-hidden="true" />
             {error}
           </p>
         )}
 
-        <button type="submit" className="btn btn-primary btn-block" disabled={submitting}>
-          {submitting ? (
-            <LoaderCircle className="spin" size={16} aria-hidden="true" />
-          ) : (
-            <LogIn size={16} aria-hidden="true" />
-          )}
+        <button type="submit" className="button button-solid" disabled={submitting} aria-busy={submitting}>
           Log in
         </button>
       </form>

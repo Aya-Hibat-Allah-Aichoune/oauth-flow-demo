@@ -6,6 +6,8 @@ const STATUS_TEXT: Record<number, string> = {
   401: 'Unauthorized',
   403: 'Forbidden',
   404: 'Not Found',
+  413: 'Payload Too Large',
+  429: 'Too Many Requests',
   500: 'Internal Server Error',
   502: 'Bad Gateway',
   503: 'Service Unavailable',

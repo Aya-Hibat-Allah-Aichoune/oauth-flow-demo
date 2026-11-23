@@ -28,6 +28,9 @@ function mockBackend() {
     }
     if (url.endsWith('/logout')) return new Response(null, { status: 204 });
     if (!authorization) return json({ error: 'missing_token', message: 'An access token is required' }, 401);
+    if (authorization !== `Bearer ${TOKEN}`) {
+      return json({ error: 'invalid_token', message: 'The access token is invalid, expired or revoked' }, 401);
+    }
     if (url.endsWith('/api/data')) {
       return json({
         user: { id: 'user-1', username: 'david' },
@@ -64,8 +67,8 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: 'Get my data' }));
 
-    expect(await region('Service response').findByText('Build the OAuth flow')).toBeInTheDocument();
-    expect(region('Service response').getByText('200 OK')).toBeInTheDocument();
+    expect(await region('Message').findByText('Build the OAuth flow')).toBeInTheDocument();
+    expect(region('Message').getByText('200 OK')).toBeInTheDocument();
     const dataCall = fetchMock.mock.calls.find(([input]) => String(input).endsWith('/api/data'));
     expect(new Headers(dataCall?.[1]?.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`);
   });
@@ -100,7 +103,7 @@ describe('App', () => {
     await logIn(user, 'david', 'david123');
     await user.click(await screen.findByRole('button', { name: 'Admin stats' }));
 
-    const response = region('Service response');
+    const response = region('Message');
     expect(await response.findByText('403 Forbidden')).toBeInTheDocument();
     expect(response.getByText('insufficient_scope')).toBeInTheDocument();
     expect(response.getByText(/missing the required scope/)).toBeInTheDocument();
@@ -119,17 +122,28 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Revoked token' })).toBeEnabled();
   });
 
-  it('never shows the password in the network inspector', async () => {
+  it('draws the token check the service does with the auth server', async () => {
     const user = userEvent.setup();
     mockBackend();
     render(<App />);
 
     await logIn(user, 'david', 'david123');
-    const network = region('Network log');
-    await user.click(await network.findByRole('button', { name: /POST \/login/ }));
+    await user.click(await screen.findByRole('button', { name: 'Forged token' }));
 
-    const details = screen.getByRole('region', { name: 'Network log' });
-    expect(details).toHaveTextContent('••••••••');
-    expect(details).not.toHaveTextContent('david123');
+    expect(await region('Sequence diagram').findByText('active: false')).toBeInTheDocument();
+    expect(region('Message').getByText('invalid_token')).toBeInTheDocument();
+  });
+
+  it('never shows the password when you open the login message', async () => {
+    const user = userEvent.setup();
+    mockBackend();
+    render(<App />);
+
+    await logIn(user, 'david', 'david123');
+    await user.click(await region('Sequence diagram').findByRole('button', { name: /POST \/login/ }));
+
+    const message = screen.getByRole('region', { name: 'Message' });
+    expect(message).toHaveTextContent('••••••••');
+    expect(message).not.toHaveTextContent('david123');
   });
 });

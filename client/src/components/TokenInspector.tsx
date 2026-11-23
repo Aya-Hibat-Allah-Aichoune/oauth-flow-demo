@@ -14,7 +14,7 @@ export function TokenInspector({ token }: TokenInspectorProps) {
   const [header = '', payload = '', signature = ''] = token.split('.');
 
   return (
-    <div className="inspector">
+    <div className="token">
       <div className="tabs" role="tablist" aria-label="Access token">
         {(['encoded', 'decoded'] as const).map((name) => (
           <button
@@ -27,7 +27,7 @@ export function TokenInspector({ token }: TokenInspectorProps) {
             className="tab"
             onClick={() => setTab(name)}
           >
-            {name === 'encoded' ? 'Encoded' : 'Decoded'}
+            {name}
           </button>
         ))}
       </div>
@@ -38,20 +38,19 @@ export function TokenInspector({ token }: TokenInspectorProps) {
             <span className="jwt-header">{header}</span>.<span className="jwt-payload">{payload}</span>.
             <span className="jwt-signature">{signature}</span>
           </code>
-          <ul className="jwt-legend">
-            <li className="jwt-header">Header</li>
-            <li className="jwt-payload">Payload</li>
-            <li className="jwt-signature">Signature</li>
-          </ul>
+          <p className="jwt-legend">
+            <span className="jwt-header">header</span> . <span className="jwt-payload">payload</span> .{' '}
+            <span className="jwt-signature">signature</span>
+          </p>
         </div>
       ) : (
-        <div role="tabpanel" id={`${id}-decoded`} aria-labelledby={`${id}-decoded-tab`} className="decoded">
-          <span className="decoded-label jwt-header">Header</span>
+        <div role="tabpanel" id={`${id}-decoded`} aria-labelledby={`${id}-decoded-tab`}>
+          <p className="part-label jwt-header">header</p>
           <JsonView value={decodeJwtHeader(token)} />
-          <span className="decoded-label jwt-payload">Payload</span>
+          <p className="part-label jwt-payload">payload</p>
           <JsonView value={decodeJwt(token)} />
-          <p className="hint">
-            Decoded in the browser only to show it. The service never trusts these claims: it asks the auth server.
+          <p className="muted small">
+            Decoded here only to show it. The service never trusts these claims: it asks the auth server.
           </p>
         </div>
       )}

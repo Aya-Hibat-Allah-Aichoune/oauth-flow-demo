@@ -1,4 +1,3 @@
-import { Check, Copy, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { useNow } from '../hooks';
 import { useToast } from '../toast';
@@ -33,69 +32,49 @@ export function SessionCard({ session, onLogout }: SessionCardProps) {
   }
 
   return (
-    <section className="card" aria-labelledby="session-title">
-      <div className="session-head">
-        <span className="avatar" aria-hidden="true">
-          {session.username[0]?.toUpperCase()}
+    <section className="block" aria-labelledby="session-title">
+      <div className="block-head">
+        <span className="block-number" aria-hidden="true">
+          1
         </span>
-        <div className="session-who">
-          <h2 id="session-title">Signed in as {session.username}</h2>
-          <div className="chips">
-            {session.scope.split(' ').map((scope) => (
-              <span key={scope} className="chip chip-accent">
-                {scope}
-              </span>
-            ))}
-          </div>
-        </div>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={onLogout}>
-          <LogOut size={15} aria-hidden="true" />
+        <h2 id="session-title">Signed in as {session.username}</h2>
+        <button type="button" className="text-button" onClick={onLogout}>
           Log out
         </button>
       </div>
 
-      <div className="session-token">
-        <ExpiryRing issuedAt={session.issuedAt} expiresAt={session.expiresAt} />
-        <button type="button" className="btn btn-sm" onClick={copyToken}>
-          {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
-          {copied ? 'Copied' : 'Copy token'}
-        </button>
-      </div>
+      <p className="scopes">
+        scope{' '}
+        {session.scope.split(' ').map((scope) => (
+          <code key={scope}>{scope}</code>
+        ))}
+      </p>
+
+      <Expiry issuedAt={session.issuedAt} expiresAt={session.expiresAt} />
 
       <TokenInspector token={session.token} />
+
+      <button type="button" className="text-button copy-token" onClick={copyToken}>
+        {copied ? 'copied' : 'copy token'}
+      </button>
     </section>
   );
 }
 
-const RING_RADIUS = 16;
-const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
-
-function ExpiryRing({ issuedAt, expiresAt }: { issuedAt: number; expiresAt: number }) {
+function Expiry({ issuedAt, expiresAt }: { issuedAt: number; expiresAt: number }) {
   const now = useNow(1000);
   const remainingMs = Math.max(0, expiresAt - now);
   const progress = remainingMs / Math.max(1, expiresAt - issuedAt);
   const minutes = Math.floor(remainingMs / 60_000);
   const seconds = Math.floor((remainingMs % 60_000) / 1000);
   const expired = remainingMs === 0;
-  const tone = expired ? 'is-expired' : progress < 0.2 ? 'is-low' : '';
 
   return (
-    <div className={`expiry ${tone}`}>
-      <svg className="expiry-ring" viewBox="0 0 40 40" aria-hidden="true">
-        <circle className="expiry-track" cx="20" cy="20" r={RING_RADIUS} />
-        <circle
-          className="expiry-value"
-          cx="20"
-          cy="20"
-          r={RING_RADIUS}
-          strokeDasharray={RING_LENGTH}
-          strokeDashoffset={RING_LENGTH * (1 - progress)}
-        />
-      </svg>
-      <div className="expiry-text">
-        <span className="expiry-label">Access token</span>
-        <strong>{expired ? 'Expired' : `Expires in ${minutes}:${String(seconds).padStart(2, '0')}`}</strong>
-      </div>
+    <div className={`expiry ${expired ? 'is-expired' : progress < 0.2 ? 'is-low' : ''}`}>
+      <span>{expired ? 'Token expired' : `Token expires in ${minutes}:${String(seconds).padStart(2, '0')}`}</span>
+      <span className="expiry-fuse" aria-hidden="true">
+        <span style={{ width: `${progress * 100}%` }} />
+      </span>
     </div>
   );
 }
