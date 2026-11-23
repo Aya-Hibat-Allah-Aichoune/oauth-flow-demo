@@ -25,7 +25,7 @@ services:
       - key: JWT_ISSUER
         value: https://oauth-lab-demo-auth.onrender.com
       - key: TRUST_PROXY
-        value: '1'
+        value: '2'
 
   - type: web
     name: oauth-lab-demo-service

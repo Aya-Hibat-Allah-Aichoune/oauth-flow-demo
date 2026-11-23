@@ -15,7 +15,7 @@ npm run dev        # or: docker compose up --build
 
 Client on :5173, auth server on :4000, service on :4001. Demo users are `david` (`read:data`) and `admin` (`read:data admin`), and the login form fills them in for you.
 
-There's also a [`render.yaml`](render.yaml) blueprint that deploys the three apps on Render's free plan.
+**Live demo:** https://oauth-lab-demo.onrender.com. It runs on Render's free plan (from [`render.yaml`](render.yaml)), so the first load can take about a minute while the servers wake up.
 
 ![The app after logging in as admin and calling the service](docs/screenshot.jpg)
 
@@ -78,6 +78,6 @@ Errors always look like `{ "error": "...", "message": "..." }`, and the service 
 - Only the service can call `/introspect`, because it needs HTTP Basic client credentials. CORS is also off for that route.
 - A wrong username and a wrong password get the same 401 and take about the same time, because unknown users are checked against a dummy scrypt hash. So the login can't be used to find out which users exist.
 - Every token has a `jti`. Logout puts it in a revoke list, and the list drops each entry once that token would have expired anyway.
-- The login limit counts failures per IP. By default `X-Forwarded-For` is ignored, so nobody can skip the limit by sending a fake one. Behind a proxy, `TRUST_PROXY` is the number of proxies to trust (it's `1` on Render).
+- The login limit counts failures per IP. By default `X-Forwarded-For` is ignored, so nobody can skip the limit by sending a fake one. Behind a proxy, `TRUST_PROXY` is the number of proxies to trust (it's `2` on Render, because of Cloudflare and Render's load balancer).
 - The client keeps the token in memory only, not in `localStorage`. A reload logs you out, which I think is fine here.
 - In Docker each server is one esbuild bundle running as a non-root user, so the images don't need `node_modules`.
