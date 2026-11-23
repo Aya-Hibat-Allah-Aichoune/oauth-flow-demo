@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { api, type ApiResult } from './api';
+import { AUTH_URL, SERVICE_URL, api, hostOf, type ApiResult } from './api';
 import { ActionsCard, type ActionKey } from './components/ActionsCard';
 import { FlowVisualizer } from './components/FlowVisualizer';
 import { LoginForm } from './components/LoginForm';
@@ -126,7 +126,9 @@ export function App() {
       </main>
 
       <footer className="footer">
-        <p>localhost:5173 · auth :4000 · service :4001</p>
+        <p>
+          {window.location.host} · auth {hostOf(AUTH_URL)} · service {hostOf(SERVICE_URL)}
+        </p>
       </footer>
     </div>
   );

@@ -1,5 +1,5 @@
 import { Monitor, Moon, Sun, Workflow } from 'lucide-react';
-import { AUTH_URL, SERVICE_URL } from '../api';
+import { AUTH_URL, SERVICE_URL, hostOf } from '../api';
 import { useHealth, type Health } from '../hooks';
 import { useTheme } from '../theme';
 
@@ -23,8 +23,8 @@ export function TopBar() {
         </a>
 
         <div className="topbar-actions">
-          <HealthPill name="Auth server" port="4000" health={auth} />
-          <HealthPill name="Service" port="4001" health={service} />
+          <HealthPill name="Auth server" url={AUTH_URL} health={auth} />
+          <HealthPill name="Service" url={SERVICE_URL} health={service} />
           <button
             type="button"
             className="icon-button"
@@ -42,13 +42,13 @@ export function TopBar() {
 
 interface HealthPillProps {
   name: string;
-  port: string;
+  url: string;
   health: Health;
 }
 
-function HealthPill({ name, port, health }: HealthPillProps) {
+function HealthPill({ name, url, health }: HealthPillProps) {
   return (
-    <span className={`health health-${health}`} title={`${name} (:${port}) is ${HEALTH_TEXT[health]}`}>
+    <span className={`health health-${health}`} title={`${name} (${hostOf(url)}) is ${HEALTH_TEXT[health]}`}>
       <span className="health-dot" aria-hidden="true" />
       <span className="health-name">{name}</span>
       <span className="visually-hidden">is {HEALTH_TEXT[health]}</span>

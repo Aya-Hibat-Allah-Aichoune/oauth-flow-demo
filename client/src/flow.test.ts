@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { loginSteps, serviceSteps } from './flow';
+import { loginSteps, serviceSteps, withPort } from './flow';
+
+describe('withPort', () => {
+  it('shows the port for local URLs', () => {
+    expect(withPort('Node', 'http://localhost:4000')).toBe('Node · :4000');
+  });
+
+  it('leaves it out when the URL uses the default port', () => {
+    expect(withPort('Node', 'https://oauth-lab-demo-auth.onrender.com')).toBe('Node');
+  });
+});
 
 describe('loginSteps', () => {
   it('marks steps 1 and 2 as done after a login', () => {

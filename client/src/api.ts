@@ -1,6 +1,10 @@
 export const AUTH_URL = import.meta.env.VITE_AUTH_URL ?? 'http://localhost:4000';
 export const SERVICE_URL = import.meta.env.VITE_SERVICE_URL ?? 'http://localhost:4001';
 
+export function hostOf(url: string): string {
+  return new URL(url).host;
+}
+
 export interface ApiError {
   error: string;
   message: string;

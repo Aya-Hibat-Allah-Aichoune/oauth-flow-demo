@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { AUTH_URL, SERVICE_URL } from './api';
 import { usePrefersReducedMotion } from './hooks';
 
 export type StepState = 'idle' | 'ok' | 'error';
@@ -7,10 +8,15 @@ export type FlowState = [StepState, StepState, StepState, StepState, StepState];
 
 export type NodeId = 'client' | 'auth' | 'service';
 
+export function withPort(runtime: string, url: string): string {
+  const { port } = new URL(url);
+  return port ? `${runtime} · :${port}` : runtime;
+}
+
 export const NODES: Record<NodeId, { name: string; detail: string }> = {
-  client: { name: 'Client', detail: 'React · :5173' },
-  auth: { name: 'Auth server', detail: 'Node · :4000' },
-  service: { name: 'Service', detail: 'Node · :4001' },
+  client: { name: 'Client', detail: withPort('React', window.location.origin) },
+  auth: { name: 'Auth server', detail: withPort('Node', AUTH_URL) },
+  service: { name: 'Service', detail: withPort('Node', SERVICE_URL) },
 };
 
 export interface FlowStep {
