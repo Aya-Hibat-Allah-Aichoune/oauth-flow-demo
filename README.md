@@ -17,9 +17,9 @@ Client on :5173, auth server on :4000, service on :4001. Demo users are `david` 
 
 **Live demo:** https://oauth-lab-demo.onrender.com. It runs on Render's free plan (from [`render.yaml`](render.yaml)), so the first load can take about a minute while the servers wake up.
 
-![The app after logging in as admin and calling the service](docs/screenshot.jpg)
+![The app drawing a login, a forged token and a data call as a sequence diagram](docs/screenshot.jpg)
 
-Besides the normal calls, the UI has buttons for the failure cases: no token, a forged token (payload changed to add `admin`, original signature) and a revoked token (reused after logout).
+The client draws every call as a sequence diagram, and you can click any arrow to see the HTTP message behind it. The browser can't see the service asking the auth server about the token, so those two arrows are dotted and inferred from the service's answer. There are also buttons for the failure cases: no token, a forged token (admin scope and a later expiry, original signature) and a revoked token (reused after logout).
 
 ## Flow
 
