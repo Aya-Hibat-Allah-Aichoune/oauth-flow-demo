@@ -1,0 +1,53 @@
+envVarGroups:
+  - name: oauth-lab-shared
+    envVars:
+      - key: SERVICE_CLIENT_ID
+        value: data-service
+      - key: SERVICE_CLIENT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://oauth-lab-demo.onrender.com
+
+services:
+  - type: web
+    name: oauth-lab-demo-auth
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build -w auth-server
+    startCommand: node auth-server/dist/index.cjs
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: oauth-lab-shared
+      - key: AUTH_SERVER_PORT
+        value: '10000'
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ISSUER
+        value: https://oauth-lab-demo-auth.onrender.com
+      - key: TRUST_PROXY
+        value: '2'
+
+  - type: web
+    name: oauth-lab-demo-service
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build -w service
+    startCommand: node service/dist/index.cjs
+    healthCheckPath: /health
+    envVars:
+      - fromGroup: oauth-lab-shared
+      - key: SERVICE_PORT
+        value: '10000'
+      - key: AUTH_SERVER_URL
+        value: https://oauth-lab-demo-auth.onrender.com
+
+  - type: web
+    name: oauth-lab-demo
+    runtime: static
+    buildCommand: npm ci --include=dev && npm run build -w client
+    staticPublishPath: ./client/dist
+    envVars:
+      - key: VITE_AUTH_URL
+        value: https://oauth-lab-demo-auth.onrender.com
+      - key: VITE_SERVICE_URL
+        value: https://oauth-lab-demo-service.onrender.com
