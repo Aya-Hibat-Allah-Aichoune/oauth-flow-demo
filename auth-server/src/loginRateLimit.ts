@@ -27,7 +27,6 @@ interface Bucket {
 }
 
 export function createLoginRateLimiter(options: LoginRateLimitOptions): LoginRateLimiter & {
-  /** Exposed for tests: number of IP buckets still held in memory. */
   bucketCount(): number;
 } {
   const now = options.now ?? Date.now;
