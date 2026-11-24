@@ -47,6 +47,21 @@ function mockBackend() {
   return fetchMock;
 }
 
+function answerLogoutWith(fetchMock: ReturnType<typeof mockBackend>, respond: () => Promise<Response>) {
+  const backend = fetchMock.getMockImplementation();
+  fetchMock.mockImplementation(async (input, init) =>
+    String(input).endsWith('/logout') ? respond() : backend!(input, init),
+  );
+}
+
+function renderWithToasts() {
+  render(
+    <ToastProvider>
+      <App />
+    </ToastProvider>,
+  );
+}
+
 async function logIn(user: UserEvent, username: string, password: string) {
   await user.type(screen.getByLabelText('Username'), username);
   await user.type(screen.getByLabelText('Password'), password);
@@ -123,36 +138,34 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Revoked token' })).toBeEnabled();
   });
 
-  it('keeps the session when logout fails and does not mark the token as revoked', async () => {
+  it('keeps the session when the auth server cannot be reached to log out', async () => {
     const user = userEvent.setup();
-    const fetchMock = mockBackend();
-    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
-      const url = String(input);
-      if (url.endsWith('/logout')) {
-        return json({ error: 'invalid_token', message: 'The access token is invalid, expired or revoked' }, 401);
-      }
-      if (url.endsWith('/health')) return json({ status: 'ok' });
-      if (url.endsWith('/login')) {
-        return json({ access_token: TOKEN, token_type: 'Bearer', expires_in: 900, scope: 'read:data' });
-      }
-      return json({ error: 'not_found', message: 'Route not found' }, 404);
+    answerLogoutWith(mockBackend(), async () => {
+      throw new TypeError('Failed to fetch');
     });
-
-    render(
-      <ToastProvider>
-        <App />
-      </ToastProvider>,
-    );
+    renderWithToasts();
 
     await logIn(user, 'david', 'david123');
-    expect(await screen.findByRole('heading', { name: 'Signed in as david' })).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Log out' }));
+    await user.click(await screen.findByRole('button', { name: 'Log out' }));
 
     expect(await screen.findByText('Logout failed')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Signed in as david' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Revoked token' })).toBeDisabled();
-    expect(screen.queryByRole('heading', { name: 'Log in' })).not.toBeInTheDocument();
+  });
+
+  it('ends the session when the token was already invalid, without calling it revoked', async () => {
+    const user = userEvent.setup();
+    answerLogoutWith(mockBackend(), async () =>
+      json({ error: 'invalid_token', message: 'A valid bearer token is required to log out' }, 401),
+    );
+    renderWithToasts();
+
+    await logIn(user, 'david', 'david123');
+    await user.click(await screen.findByRole('button', { name: 'Log out' }));
+
+    expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument();
+    expect(screen.getByText('Session ended')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Revoked token' })).toBeDisabled();
   });
 
   it('draws the token check the service does with the auth server', async () => {
